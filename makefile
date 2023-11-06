@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Werror
+CFLAGS = -Wall 
 
 SRC_DIR = ./src/
 INC_DIR = ./include/
@@ -11,7 +11,7 @@ TARGET = chess
 all: build run clean
 
 build:
-	$(CC) $(CFLAGS) -I$(INC_FILES) $(SRC_FILES) -o $(TARGET)
+	$(CC) -I$(INC_FILES) $(SRC_FILES) -o $(TARGET)
 
 run:
 	./$(TARGET)

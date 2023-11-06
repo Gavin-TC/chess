@@ -2,7 +2,6 @@
 #define CONSTANTS_H
 
 #include <stdlib.h>
-#include <wchar.h>
 
 #define BOARD_WIDTH 8
 #define BOARD_HEIGHT 8
@@ -21,11 +20,17 @@ enum PieceColor {
   BLACK
 };
 
+typedef struct Position {
+  int x;
+  int y;
+} Position;
+
 typedef struct Piece {
   enum PieceType type;
   enum PieceColor color;
+  struct Position pos;
   int value;
-  wchar_t chr; // unicode character
+  char chr; // unicode character
 } Piece;
 
 // externs
