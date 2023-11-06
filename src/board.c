@@ -1,6 +1,22 @@
 #include <stdbool.h>
 #include <stdio.h>
-#include <wchar.hDTH * sizeof(wchar_t));
+#include <wchar.h>
+#include <board.h>
+#include <constants.h>
+
+void setupPieces(wchar_t** board, bool is_player_first);
+void freeBoard(wchar_t** board);
+
+// returns a board[]
+wchar_t** createBoard(bool is_player_first) {
+  wchar_t** new_board = (wchar_t**) malloc(BOARD_HEIGHT * sizeof(wchar_t*));
+
+  // handle malloc error
+  if (new_board == NULL) return NULL;
+
+  // make the checker pattern
+  for (int y = 0; y < BOARD_HEIGHT; y++) {
+    new_board[y] = (wchar_t*) malloc(BOARD_WIDTH * sizeof(wchar_t));
 
     // handle malloc error, again
     if (new_board[y] == NULL) freeBoard(new_board);
@@ -76,7 +92,9 @@ void setupPieces(wchar_t** board, bool is_player_first) {
 void drawBoard(wchar_t** board) {
   for (int y = 0; y < BOARD_HEIGHT; y++) {
     for (int x = 0; x < BOARD_WIDTH; x++) {
-      wprintf("%lc", board[y][x]);
+      if (sizeof(board[y][x]) == sizeof(wchar_t)) {
+        wprintf("%lc", board[y][x]);
+      }
     }
   }
 }
