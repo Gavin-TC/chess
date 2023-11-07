@@ -23,7 +23,7 @@ enum PieceColor {
 typedef struct Position {
   int x;
   int y;
-} Position;
+};
 
 typedef struct Piece {
   enum PieceType type;

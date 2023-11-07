@@ -2,6 +2,7 @@
 #define PIECE_H
 
 #include <stdlib.h>
+#include <constants.h>
 
 Piece* createPiece(enum PieceType type, enum PieceColor color, int x, int y, int value, char chr);
 
