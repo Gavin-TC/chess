@@ -6,12 +6,14 @@
 #include <string.h>
 
 #include <constants.h>
+#include <player.h>
+#include <piece.h>
 
 char** setupBoard(bool is_player_first);
-Piece* setupPieces(bool is_player_first);
-void drawBoard(char** board, Piece* pieces);
-bool evaluateMove(char* move);
-void movePiece(char** board, Piece* pieces, char* move);
+Piece** setupPieces(bool is_player_first);
+void drawBoard(char** board, Piece** pieces);
+bool evaluateMove(char* move, char** board, Piece** pieces);
+void movePiece(char** board, Piece* piece, char* move);
 void freeBoard(char** board);
 
 // externs
