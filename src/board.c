@@ -2,6 +2,7 @@
 
 void freeBoard(char** board);
 int letterToNumberFile(char* rank);
+void movePiece(Piece** pieces, Piece* chosen_piece, int move_file, int move_rank);
 
 // returns a board[]
 char** setupBoard(bool is_player_first) {
@@ -110,56 +111,56 @@ Piece** setupPieces(bool is_player_first) {
 	}
 
   pieces[24]->type = ROOK;
-  pieces[24]->color = WHITE;
+  pieces[24]->color = BLACK;
   pieces[24]->pos.x = 0;
   pieces[24]->pos.y = black_height;
   pieces[24]->value = 5;
   pieces[24]->chr = 'r';
 
   pieces[25]->type = KNIGHT;
-  pieces[25]->color = WHITE;
+  pieces[25]->color = BLACK;
   pieces[25]->pos.x = 1;
   pieces[25]->pos.y = black_height;
   pieces[25]->value = 3;
   pieces[25]->chr = 'n';
 
   pieces[26]->type = BISHOP;
-  pieces[26]->color = WHITE;
+  pieces[26]->color = BLACK;
   pieces[26]->pos.x = 2;
   pieces[26]->pos.y = black_height;
   pieces[26]->value = 3;
   pieces[26]->chr = 'b';
 
   pieces[27]->type = QUEEN;
-  pieces[27]->color = WHITE;
+  pieces[27]->color = BLACK;
   pieces[27]->pos.x = 3;
   pieces[27]->pos.y = black_height;
   pieces[27]->value = 9;
   pieces[27]->chr = 'q';
 
   pieces[28]->type = KING;
-  pieces[28]->color = WHITE;
+  pieces[28]->color = BLACK;
   pieces[28]->pos.x = 4;
   pieces[28]->pos.y = black_height;
   pieces[28]->value = 0;
   pieces[28]->chr = 'k';
 
   pieces[29]->type = BISHOP;
-  pieces[29]->color = WHITE;
+  pieces[29]->color = BLACK;
   pieces[29]->pos.x = 5;
   pieces[29]->pos.y = black_height;
   pieces[29]->value = 3;
   pieces[29]->chr = 'b';
 
   pieces[30]->type = KNIGHT;
-  pieces[30]->color = WHITE;
+  pieces[30]->color = BLACK;
   pieces[30]->pos.x = 6;
   pieces[30]->pos.y = black_height;
   pieces[30]->value = 3;
   pieces[30]->chr = 'n';
 
   pieces[31]->type = ROOK;
-  pieces[31]->color = WHITE;
+  pieces[31]->color = BLACK;
   pieces[31]->pos.x = 7;
   pieces[31]->pos.y = black_height;
   pieces[31]->value = 5;
@@ -231,18 +232,21 @@ bool evaluateMove(char* move, char** board, Piece** pieces) {
   rank2 = (int) 8 - (rank_ch2[0] - '0');
 
   // if anything is out of bounds
-  if (!(file1 > 0 && file1 <= 8) &&
-      !(file2 > 0 && file2 <= 8) &&
-      !(rank1 > 0 && rank1 <= 8) &&
-      !(rank2 > 0 && rank2 <= 8)) {
+  if (!(file1 >= 0 && file1 < 8) ||
+      !(file2 >= 0 && file2 < 8) ||
+      !(rank1 >= 0 && rank1 < 8) ||
+      !(rank2 >= 0 && rank2 < 8)) {
     printf("One or more of the coordinates are out of bounds! (e.g. a9i0 = bad!)\n");
     return false;
+  } else {
+    printf("Piece move was x: %d - y: %d\n", file2, rank2);
   }
 
   // player is selecting the same piece
   if (file1 == file2 && rank1 == rank2) return false;
 
-  Piece* chosen_piece;
+  Piece* chosen_piece = NULL;
+  Piece* target_piece = NULL;  // the piece that the player is trying to move onto
   for (int i = 0; i < 32; i++) {
     // Grab the piece that is selected
     if (pieces[i]->pos.x == file1 && pieces[i]->pos.y == rank1) {
@@ -250,18 +254,35 @@ bool evaluateMove(char* move, char** board, Piece** pieces) {
     }
 
     if (pieces[i]->pos.x == file2 && pieces[i]->pos.y == rank2) {
-      // trying to take/move onto a friendly piece
-      if (pieces[i]->color == (is_player_first) ? WHITE : BLACK) {
-        printf("You cannot move your piece ontop of your own pieces!\n");
-        return false;
-      }
+      target_piece = pieces[i];
+    } else {
+      target_piece = NULL;
     }
   }
 
-  if (isPieceMoveValid(pieces, chosen_piece, file1, rank1, file2, rank2)) {
-    chosen_piece->pos.x = file2;
-    chosen_piece->pos.y = rank2;
-    printf("chosen_piece new pos {%d, %d}\n", chosen_piece->pos.x, chosen_piece->pos.y);
+  // if we didn't find the piece the player was choosing
+  if (chosen_piece == NULL) { 
+    printf("There isn't a piece there!\n");
+    return false;
+  }
+
+  if (chosen_piece->pos.x == file1 && chosen_piece->pos.y == rank1) {
+    if (chosen_piece->color == (is_player_first) ? BLACK : WHITE) {
+      printf("You cannot the opponents pieces!\n");
+      return false;
+    }
+  }
+
+  if (chosen_piece->pos.x == file2 && chosen_piece->pos.y == rank2) {
+    // trying to take/move onto a friendly piece
+    if (chosen_piece->color == (is_player_first) ? WHITE : BLACK) {
+      printf("You cannot move your piece ontop of your own pieces!\n");
+      return false;
+    }
+  }
+
+  if (isPieceMoveValid(pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
+    movePiece(pieces, chosen_piece, file2, rank2);
   }
   return true;
 }
@@ -310,12 +331,15 @@ int letterToNumberFile(char* file) {
   return number_file;
 }
 
-// this assumes the move is valid
-// stupid, i know. 
-// also, probably dont have to
-// pass pieces since its an extern
-void movePiece(char** board, Piece* piece, char* move) {
+void movePiece(Piece** pieces, Piece* chosen_piece, int move_file, int move_rank) {
+  for (int i = 0; i < 32; i++) {
+    if (pieces[i]->pos.x == move_file && pieces[i]->pos.y == move_rank) {
+      pieces[i]->pos.x -= 20;
+    }
+  }
 
+  chosen_piece->pos.x = move_file;
+  chosen_piece->pos.y = move_rank;
 }
 
 void freeBoard(char** board) {

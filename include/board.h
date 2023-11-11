@@ -13,7 +13,7 @@ char** setupBoard(bool is_player_first);
 Piece** setupPieces(bool is_player_first);
 void drawBoard(char** board, Piece** pieces);
 bool evaluateMove(char* move, char** board, Piece** pieces);
-void movePiece(char** board, Piece* piece, char* move);
+void movePiece(Piece** pieces, Piece* chosen_piece, int move_file, int move_rank);
 void freeBoard(char** board);
 
 // externs

@@ -17,6 +17,7 @@ char* getPlayerMove(void) {
   } else {
     printf("Error reading input.\n");
   }
+  printf("\033[H\033[J");
   return move;
 }
 

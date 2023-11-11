@@ -18,29 +18,53 @@ Piece* createPiece(enum PieceType type, enum PieceColor color, int x, int y, int
   return new_piece;
 }
 
-bool isPieceMoveValid(Piece** pieces, Piece* piece, int file1, int rank1, int file2, int rank2) {
+bool isPieceMoveValid(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2) {
   // 0: PAWN    3: ROOK
   // 1: BISHOP  4: QUEEN
   // 2: KNIGHT  5: KING
-  int piece_type = piece->type;
-
-  switch (piece_type) {
+  
+  switch (chosen_piece->type) {
     case 0:  // PAWN
-      break;
+      // if we're trying to move onto a piece
+      if (target_piece != NULL) {
+        // if the piece is ours
+        if (target_piece->color == (is_player_first) ? WHITE : BLACK) {
+          printf("You can't move a piece onto your own piece!\n");
+          return false;
+        }
+      }
+      
+      // if we're trying to move up 1/2 spaces and it's not on a piece 
+      // (PAWN can move twice by default, add checks to see if it's moved before)
+      // replace 1 and 2 with correct number based on player's piece
+
+      printf("file1(%d) == file2(%d) = %d\n", file1, file2, (file1 == file2));
+      printf("rank2(%d) == rank1(%d) + 1 = %d\n", rank2, rank1, (rank2 == rank1 + 1));
+      printf("rank2(%d) == rank1(%d) + 2 = %d\n", rank2, rank1, (rank2 == rank1 + 2));
+
+      if (file1 == file2 && (rank2 == rank1 + (is_player_first) ? -1 : 1 || rank2 == rank1 + (is_player_first) ? -2 : 2)) {
+        if (target_piece != NULL) {
+          if (target_piece->pos.x == file2 && target_piece->pos.y == rank2) {
+            printf("You can only attack diagonally with a pawn!\n");
+            return false;
+          }
+        }
+        printf("About to make the move!\n");
+        return true;
+      }
+      printf("You can't move the pawn there!\n");
+      return false;
     
     case 1: // BISHOP
       break;
     
     case 2:  // KNIGHT
-      // checking if the move is ontop of a same colored piece 
-      for (int i = 0; i < 32; i++) {
-        // if there's a piece on the attempt move spotif
-        if (pieces[i]->pos.x == file2 && pieces[i]->pos.y == rank2) {
-          // if the piece is our piece
-          if (pieces[i]->color == (is_player_first) ? 0 : 1) {
-            printf("You can't move a piece onto your own piece!\n");
-            return false;
-          }
+      // if there's a piece on the attempt move spot
+      if (target_piece == NULL) {
+        // if the piece is ours
+        if (target_piece->color == (is_player_first) ? WHITE : BLACK) {
+          printf("You can't move a piece onto your own piece!\n");
+          return false;
         }
       }
 
@@ -56,11 +80,9 @@ bool isPieceMoveValid(Piece** pieces, Piece* piece, int file1, int rank1, int fi
       } else if (file2 == file1 + 2 && (rank2 == rank1 + 1 || rank2 == rank1 - 1)) {
         // up/down 1 left 2
         return true;
-      } else {
-        printf("You can't move the knight there!");
-        return false;
       }
-      break;
+      printf("You can't move the knight there!");
+      return false;
     
     case 3: // ROOK
       break;
