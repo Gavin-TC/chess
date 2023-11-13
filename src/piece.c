@@ -18,6 +18,10 @@ Piece* createPiece(enum PieceType type, enum PieceColor color, int x, int y, int
   return new_piece;
 }
 
+// TODO: is_player_first needs to be replaced with
+// a parameter or a extern that is changed depending
+// on whos turn it is.
+
 bool isPieceMoveValid(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2) {
   // 0: PAWN    3: ROOK
   // 1: BISHOP  4: QUEEN
@@ -38,20 +42,33 @@ bool isPieceMoveValid(Piece** pieces, Piece* chosen_piece, Piece* target_piece, 
       // (PAWN can move twice by default, add checks to see if it's moved before)
       // replace 1 and 2 with correct number based on player's piece
 
-      printf("file1(%d) == file2(%d) = %d\n", file1, file2, (file1 == file2));
-      printf("rank2(%d) == rank1(%d) + 1 = %d\n", rank2, rank1, (rank2 == rank1 + 1));
-      printf("rank2(%d) == rank1(%d) + 2 = %d\n", rank2, rank1, (rank2 == rank1 + 2));
 
-      if (file1 == file2 && (rank2 == rank1 + (is_player_first) ? -1 : 1 || rank2 == rank1 + (is_player_first) ? -2 : 2)) {
+      if (file1 == file2 && rank2 == rank1 + (is_player_first ? -1 : 1)) {
         if (target_piece != NULL) {
           if (target_piece->pos.x == file2 && target_piece->pos.y == rank2) {
             printf("You can only attack diagonally with a pawn!\n");
             return false;
           }
         }
-        printf("About to make the move!\n");
         return true;
+
+        // if we're trying to go 2 spaces, check if its the first pawn move
+      } else if (file1 == file2 && (rank2 == rank1 + (is_player_first) ? -2 : 2)
+                 && chosen_piece->pos.x == (is_player_first ? 6 : 1)) {
+        if (target_piece != NULL) {
+          if (target_piece->pos.x == file2 && target_piece->pos.y == rank2) {
+            printf("You can only attack diagonally with a pawn!\n");
+            return false;
+          }
+        }
+        return true;
+
+      } else if (file2 == file1 - 1 || file2 == file1 + 1 && rank2 == rank1 + (is_player_first ? -1 : 1)) { 
+        if (target_piece->pos.x == file2 && target_piece->pos.y == rank2) {
+          return true;
+        }
       }
+
       printf("You can't move the pawn there!\n");
       return false;
     
@@ -62,7 +79,7 @@ bool isPieceMoveValid(Piece** pieces, Piece* chosen_piece, Piece* target_piece, 
       // if there's a piece on the attempt move spot
       if (target_piece == NULL) {
         // if the piece is ours
-        if (target_piece->color == (is_player_first) ? WHITE : BLACK) {
+        if (target_piece->color == (is_player_first ? WHITE : BLACK)) {
           printf("You can't move a piece onto your own piece!\n");
           return false;
         }
