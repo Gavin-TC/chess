@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include <player.h>
+#include <bot.h>
 #include <board.h>
 #include <constants.h>
 

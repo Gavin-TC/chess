@@ -3,6 +3,9 @@
 #include <piece.h>
 #include <constants.h>
 
+bool makeDiagonalMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2);
+bool makeAxisMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2);
+
 Piece* createPiece(enum PieceType type, enum PieceColor color, int x, int y, int value, char chr) {
   Piece* new_piece = (Piece*) malloc(sizeof(Piece));
 
@@ -21,12 +24,14 @@ Piece* createPiece(enum PieceType type, enum PieceColor color, int x, int y, int
 // TODO: is_player_first needs to be replaced with
 // a parameter or a extern that is changed depending
 // on whos turn it is.
-
 bool isPieceMoveValid(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2) {
   // 0: PAWN    3: ROOK
   // 1: BISHOP  4: QUEEN
   // 2: KNIGHT  5: KING
-  
+  bool valid_move = false;
+  int file_difference = 0;
+  int rank_difference = 0;
+
   if (target_piece != NULL) {
     // if the piece is ours
     if (target_piece->color == (is_player_first ? WHITE : BLACK)) {
@@ -71,32 +76,10 @@ bool isPieceMoveValid(Piece** pieces, Piece* chosen_piece, Piece* target_piece, 
       return false;
     
     case 1: // BISHOP
-      int file_difference = file2 - file1;
-      int rank_difference = rank2 - rank1;
-
-      int file_zeroed = file_difference * -1;
-      int rank_zeroed = rank_difference * -1;
-
-      if (abs(file_difference) == abs(rank_difference)) {
-        // now we need to loop through each tile
-        // towards the destination and check if there's a piece.
-        for (int i = 1; i < abs(file_difference); i++) {
-          for (int j = 0; j < 32; j++) {
-            int target_x = file1 < file2 ? file1 + i : file1 - i;
-            int target_y = rank1 < rank2 ? rank1 + i : rank1 - i;
-
-            if (pieces[j]->pos.x == target_x && pieces[j]->pos.y == target_y) {
-              printf("There's a piece blocking that bishop move!\n");
-              return false;
-            }
-          }
-        }
-        printf("Moving the bishop...\n");
-        return true;
-      }
+      valid_move = makeDiagonalMove(pieces, chosen_piece, target_piece, file1, rank1, file2, rank2);
       
-      printf("You can't move the bishop there!\n");
-      return false;
+      if (!valid_move) printf("You can't move the bishop there!\n");
+      return valid_move;
     
     case 2:  // KNIGHT
       if (file2 == file1 + 1 && (rank2 == rank1 + 2 || rank2 == rank1 - 2)) {
@@ -117,46 +100,116 @@ bool isPieceMoveValid(Piece** pieces, Piece* chosen_piece, Piece* target_piece, 
       return false;
     
     case 3: // ROOK
+      valid_move = makeAxisMove(pieces, chosen_piece, target_piece, file1, rank1, file2, rank2);
+      
+      if (!valid_move) printf("You can't move the rook there!\n");
+      return valid_move; 
+
+    case 4: // QUEEN
+      valid_move = false;
+      
+      file_difference = file2 - file1;
+      rank_difference = rank2 - rank1;
+
       int ver_difference = rank2 - rank1;
       int hor_difference = file2 - file1;
 
-      if (abs(hor_difference) > 0 && ver_difference == 0) {
-        for (int i = file1 + (hor_difference < 0 ? -1 : 1); i != file2; i += (hor_difference < 0 ? -1 : 1)) {
-          for (int j = 0; j < 32; j++) {
-            if (pieces[j]->pos.x == i && pieces[j]->pos.y == rank1
-                && pieces[j] != target_piece && pieces[j] != chosen_piece) {
-              printf("There's a piece blocking that horizontal rook move!\n");
-              return false;
-            }
-          }
-          return true;
-        }
-      } else if (abs(ver_difference) > 0 && hor_difference == 0) {
-        for (int i = rank1 + (ver_difference < 0 ? -1 : 1); i != rank2; i += (ver_difference < 0 ? -1 : 1)) {
-          for (int j = 0; j < 32; j++) {
-            if (pieces[j]->pos.x == file1 && pieces[j]->pos.y == i 
-                && pieces[j] != target_piece) {
-              printf("There's a piece blocking that vertical rook move!\n");
-              return false;
-            }
-          }
-        return true;
-        }
+      // if the move is diagonal, make diagonal move.
+      if (abs(file_difference) == abs(rank_difference)) {
+        valid_move = makeDiagonalMove(pieces, chosen_piece, target_piece, file1, rank1, file2, rank2);
+      } else if (ver_difference == 0 && hor_difference != 0
+              || ver_difference != 0 && hor_difference == 0) {
+        valid_move = makeAxisMove(pieces, chosen_piece, target_piece, file1, rank1, file2, rank2);
       }
-      printf("You can't move the rook there!\n");
-      return false;
-
-    case 4: // QUEEN
-      break;
+      
+      if (!valid_move) printf("You cannot move the queen there!\n");
+      return valid_move;
     
     case 5: // KING
-      break;
+      file_difference = file2 - file1;
+      rank_difference = rank2 - rank1;
+
+      printf("file2 : %d\n", file2);
+      printf("rank2 : %d\n", rank2);
+
+      if (abs(file_difference) == 1 && abs(rank_difference) == 1
+          || file_difference == 0 && abs(rank_difference) == 1
+          || file_difference == 1 && abs(rank_difference) == 0) {
+        for (int i = 0; i < 32; i++) {
+          if (pieces[i]->pos.x == file2 && pieces[i]->pos.y == rank2
+              && pieces[i]->color == (is_player_first ? WHITE : BLACK)) {
+            printf("You can't move on top of a friendly piece!\n");
+            return false;
+          }
+        }
+        return true;
+      }
+      
+      printf("The king cannot move that way!\n");
+      return false;
     
     default:
       printf("There was an issue making your move!\n");
   }
 
   return true;
+}
+
+bool makeDiagonalMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2) {
+  int file_difference = file2 - file1;
+  int rank_difference = rank2 - rank1;
+
+  int file_zeroed = file_difference * -1;
+  int rank_zeroed = rank_difference * -1;
+
+  if (abs(file_difference) == abs(rank_difference)) {
+    // now we need to loop through each tile
+    // towards the destination and check if there's a piece.
+    for (int i = 1; i < abs(file_difference); i++) {
+      for (int j = 0; j < 32; j++) {
+        int target_x = file1 < file2 ? file1 + i : file1 - i;
+        int target_y = rank1 < rank2 ? rank1 + i : rank1 - i;
+
+        if (pieces[j]->pos.x == target_x && pieces[j]->pos.y == target_y) {
+          printf("There's a piece blocking that move!\n");
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
+bool makeAxisMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2) {
+  int ver_difference = rank2 - rank1;
+  int hor_difference = file2 - file1;
+
+  if (abs(hor_difference) > 0 && ver_difference == 0) {
+    for (int i = file1 + (hor_difference < 0 ? -1 : 1); i != file2; i += (hor_difference < 0 ? -1 : 1)) {
+      for (int j = 0; j < 32; j++) {
+        if (pieces[j]->pos.x == i && pieces[j]->pos.y == rank1
+            && pieces[j] != target_piece && pieces[j] != chosen_piece) {
+          printf("There's a piece blocking that move!\n");
+          return false;
+        }
+      }
+      return true;
+    }
+  } else if (abs(ver_difference) > 0 && hor_difference == 0) {
+    for (int i = rank1 + (ver_difference < 0 ? -1 : 1); i != rank2; i += (ver_difference < 0 ? -1 : 1)) {
+      for (int j = 0; j < 32; j++) {
+        if (pieces[j]->pos.x == file1 && pieces[j]->pos.y == i 
+            && pieces[j] != target_piece) {
+          printf("There's a piece blocking that move!\n");
+          return false;
+        }
+      }
+    return true;
+    }
+  }
+  printf("You can't move there!\n");
+  return false;
 }
 
 void freePieces(Piece** pieces) {
