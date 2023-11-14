@@ -281,7 +281,7 @@ bool evaluateMove(char* move, char** board, Piece** pieces) {
     }
   }
 
-  if (isPieceMoveValid(pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
+  if (isPieceMoveValid(is_player_first, pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
     movePiece(pieces, chosen_piece, file2, rank2);
   }
   return true;

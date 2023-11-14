@@ -9,6 +9,6 @@
 #include <board.h>
 
 Piece* createPiece(enum PieceType type, enum PieceColor color, int x, int y, int value, char chr);
-bool isPieceMoveValid(Piece** pieces, Piece* chosen_peice, Piece* target_piece, int file1, int rank1, int file2, int rank2);
+bool isPieceMoveValid(bool is_white, Piece** pieces, Piece* chosen_peice, Piece* target_piece, int file1, int rank1, int file2, int rank2);
 
 #endif // !PIECE_H
