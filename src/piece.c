@@ -86,7 +86,7 @@ bool isPieceMoveValid(Piece** pieces, Piece* chosen_piece, Piece* target_piece, 
             int target_y = rank1 < rank2 ? rank1 + i : rank1 - i;
 
             if (pieces[j]->pos.x == target_x && pieces[j]->pos.y == target_y) {
-              printf("There's a piece blocking that move!\n");
+              printf("There's a piece blocking that bishop move!\n");
               return false;
             }
           }
@@ -95,7 +95,7 @@ bool isPieceMoveValid(Piece** pieces, Piece* chosen_piece, Piece* target_piece, 
         return true;
       }
       
-      printf("The bishop can only move diagonally!\n");
+      printf("You can't move the bishop there!\n");
       return false;
     
     case 2:  // KNIGHT
@@ -117,22 +117,33 @@ bool isPieceMoveValid(Piece** pieces, Piece* chosen_piece, Piece* target_piece, 
       return false;
     
     case 3: // ROOK
-      bool moving_vertical = rank1 == rank2;
-      bool moving_horizontal = file1 == file2;
-
       int ver_difference = rank2 - rank1;
       int hor_difference = file2 - file1;
 
-      if (moving_vertical) {
-        for (int i = 0; i < ver_difference; i += (ver_difference < 0 ? -1 : 1)) {
-
+      if (abs(hor_difference) > 0 && ver_difference == 0) {
+        for (int i = file1 + (hor_difference < 0 ? -1 : 1); i != file2; i += (hor_difference < 0 ? -1 : 1)) {
+          for (int j = 0; j < 32; j++) {
+            if (pieces[j]->pos.x == i && pieces[j]->pos.y == rank1
+                && pieces[j] != target_piece && pieces[j] != chosen_piece) {
+              printf("There's a piece blocking that horizontal rook move!\n");
+              return false;
+            }
+          }
+          return true;
         }
-      } else if (moving_horizontal) {
-        for (int i = 0; i < hor_difference; i += (hor_difference < 0 ? -1 : 1)) {
-
+      } else if (abs(ver_difference) > 0 && hor_difference == 0) {
+        for (int i = rank1 + (ver_difference < 0 ? -1 : 1); i != rank2; i += (ver_difference < 0 ? -1 : 1)) {
+          for (int j = 0; j < 32; j++) {
+            if (pieces[j]->pos.x == file1 && pieces[j]->pos.y == i 
+                && pieces[j] != target_piece) {
+              printf("There's a piece blocking that vertical rook move!\n");
+              return false;
+            }
+          }
+        return true;
         }
       }
-
+      printf("You can't move the rook there!\n");
       return false;
 
     case 4: // QUEEN
