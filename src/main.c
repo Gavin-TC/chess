@@ -14,6 +14,10 @@ int main(void) {
   while (game_running) {
     drawBoard(board, pieces);
     char* move = getPlayerMove();  // get players move
+    if (move[0] == 'q') {
+      freeBoard(board);
+      break;
+    }
     bool valid_move = evaluateMove(move, board, pieces);  // check if players move is valid
   }
 

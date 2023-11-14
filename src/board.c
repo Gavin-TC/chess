@@ -193,7 +193,7 @@ void drawBoard(char** board, Piece** pieces) {
     }
     printf("\n");
   }
-  printf("\n  abcdefgh\n");
+  printf("  abcdefgh\n");
 }
 
 bool evaluateMove(char* move, char** board, Piece** pieces) {
@@ -343,6 +343,6 @@ void movePiece(Piece** pieces, Piece* chosen_piece, int move_file, int move_rank
 }
 
 void freeBoard(char** board) {
-  for (int y = 0; y < BOARD_HEIGHT; y++) { free(board[y]); }
+  for (int y = 0; y < BOARD_HEIGHT; y++) free(board[y]);
   free(board);
 }
