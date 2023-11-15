@@ -19,7 +19,7 @@ int main(void) {
       freeBoard(board);
       break;
     }
-    bool valid_move = evaluateMove(move, board, pieces);  // check if players move is valid
+    bool valid_move = evaluateMove(is_player_first, move, board, pieces);  // check if players move is valid
   }
 
   return 0;

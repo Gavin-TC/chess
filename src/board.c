@@ -196,7 +196,7 @@ void drawBoard(char** board, Piece** pieces) {
   printf("  abcdefgh\n");
 }
 
-bool evaluateMove(char* move, char** board, Piece** pieces) {
+bool evaluateMove(bool is_white, char* move, char** board, Piece** pieces) {
   // file is x, rank is y;
   char file_ch1[2];  // [a]1b1
   int file1 = 0;  // [a] converted to index
@@ -238,8 +238,6 @@ bool evaluateMove(char* move, char** board, Piece** pieces) {
       !(rank2 >= 0 && rank2 < 8)) {
     printf("One or more of the coordinates are out of bounds! (e.g. a9i0 = bad!)\n");
     return false;
-  } else {
-    printf("Piece move was x: %d - y: %d\n", file2, rank2);
   }
 
   // player is selecting the same piece
@@ -255,8 +253,27 @@ bool evaluateMove(char* move, char** board, Piece** pieces) {
 
     if (pieces[i]->pos.x == file2 && pieces[i]->pos.y == rank2) {
       target_piece = pieces[i];
-    } else {
-      target_piece = NULL;
+    }
+  }
+
+  // retrieve the king of the color moving a piece right now
+  Piece* mover_king = NULL;
+  for (int i = 0; i < 32; i++) {
+    printf("i : %d\n", i);
+    if (pieces[i]->chr == (is_white ? 'K' : 'k')) {
+      mover_king = pieces[i];
+      break;
+    }
+  }
+  printf("mover_king == %s\n", mover_king ? "true" : "NULL");
+  // if the piece that is trying to be moved isn't the king
+  // see if the king is in checks
+  // (basically checking if the player has to move their king to safety)
+  
+  if (chosen_piece != mover_king) {
+    if (moveIntoCheck(is_white, pieces, mover_king, NULL, mover_king->pos.x, mover_king->pos.y)) {
+      printf("You're king is in check and you must defend it!\n");
+      return false;
     }
   }
 
@@ -269,7 +286,7 @@ bool evaluateMove(char* move, char** board, Piece** pieces) {
   if (chosen_piece->pos.x == file1 && chosen_piece->pos.y == rank1) {
     if (chosen_piece->color == (is_player_first) ? BLACK : WHITE) {
       printf("You cannot the opponents pieces!\n");
-      return false;
+//      return false;
     }
   }
 
@@ -281,7 +298,7 @@ bool evaluateMove(char* move, char** board, Piece** pieces) {
     }
   }
 
-  if (isPieceMoveValid(is_player_first, pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
+  if (isPieceMoveValid(chosen_piece->color, pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
     movePiece(pieces, chosen_piece, file2, rank2);
   }
   return true;

@@ -16,8 +16,8 @@ enum PieceType {
 };
 
 enum PieceColor {
-  WHITE,
-  BLACK
+  BLACK,
+  WHITE
 };
 
 struct Position {
