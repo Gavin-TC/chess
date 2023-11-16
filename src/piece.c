@@ -37,8 +37,6 @@ bool isPieceMoveValid(bool is_white, Piece** pieces, Piece* chosen_piece, Piece*
     }
   }
 
-  
-  
   switch (chosen_piece->type) {
     case 0:  // PAWN
       // if we're trying to move up 1/2 spaces and it's not on a piece 
@@ -121,13 +119,9 @@ bool isPieceMoveValid(bool is_white, Piece** pieces, Piece* chosen_piece, Piece*
       file_difference = file2 - file1;
       rank_difference = rank2 - rank1;
 
-      printf("file_difference = %d\n", abs(file_difference));
-      printf("rank_difference = %d\n", abs(rank_difference));
-
       if (abs(file_difference) == 1 && abs(rank_difference) == 1
           || abs(file_difference) == 0 && abs(rank_difference) == 1
           || abs(file_difference) == 1 && abs(rank_difference) == 0) {
-        printf("the king is making a valid move\n");
         for (int i = 0; i < 32; i++) {
           // check if we're trying to go onto our own piece.
           if (pieces[i]->pos.x == file2 && pieces[i]->pos.y == rank2
@@ -141,7 +135,6 @@ bool isPieceMoveValid(bool is_white, Piece** pieces, Piece* chosen_piece, Piece*
         }
         return true;
       }
-      printf("the king is not making a valid move\n");
       return false;
     
     default:
@@ -165,9 +158,6 @@ bool makeDiagonalMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, 
       for (int j = 0; j < 32; j++) {
         int target_x = file1 < file2 ? file1 + i : file1 - i;
         int target_y = rank1 < rank2 ? rank1 + i : rank1 - i;
-
-        printf("target_x = %d\n", target_x);
-        printf("target_y = %d\n", target_y);
 
         if (pieces[j]->pos.x == target_x && pieces[j]->pos.y == target_y) {
           return false;
@@ -214,15 +204,21 @@ bool moveIntoCheck(bool is_white, Piece** pieces, Piece* chosen_piece, Piece* ta
   // if one of these attacks would be blocking by a piece anyways and skip it.
 
   // eureka: loop through each piece and call isPieceMoveValid on the attempted square
-  bool valid_move = false;
+  bool can_be_attacked = false;
   for (int i = 0; i < 32; i++) {
-    if (pieces[i]->color == (is_white ? BLACK : WHITE)
-        && tolower(pieces[i]->chr) != 'k') {
-      valid_move = isPieceMoveValid(false, pieces, pieces[i], NULL, pieces[i]->pos.x, pieces[i]->pos.y, file2, rank2);
-      if (valid_move) break;
+    if (pieces[i] != NULL) {
+      if (pieces[i]->color == (is_white ? BLACK : WHITE)) {
+        // check if a piece can move onto the king
+        can_be_attacked = isPieceMoveValid(false, pieces, pieces[i], NULL, pieces[i]->pos.x, pieces[i]->pos.y, file2, rank2);
+        // if any piece can do so, we immediately break as can_be_attacked is now true
+        if (can_be_attacked) break;
+      }
     }
   }
-  return valid_move;
+  if (can_be_attacked == true) {
+    printf("%s is in check and it's not letting you make the move.\n", is_white ? "WHITE" : "BLACK");
+  } 
+  return can_be_attacked;
 }
 
 void freePieces(Piece** pieces) {
