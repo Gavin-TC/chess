@@ -3,6 +3,7 @@
 #include <piece.h>
 #include <constants.h>
 
+bool makePawnMove(bool is_white, bool checking_attack, Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2);
 bool makeDiagonalMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2);
 bool makeAxisMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2);
 bool moveIntoCheck(bool is_white, Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file2, int rank2);
@@ -22,7 +23,7 @@ Piece* createPiece(enum PieceType type, enum PieceColor color, int x, int y, int
   return new_piece;
 }
 
-bool isPieceMoveValid(bool is_white, Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2) {
+bool isPieceMoveValid(bool is_white, bool checking_attack, Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2) {
   // 0: PAWN    3: ROOK
   // 1: BISHOP  4: QUEEN
   // 2: KNIGHT  5: KING
@@ -39,37 +40,8 @@ bool isPieceMoveValid(bool is_white, Piece** pieces, Piece* chosen_piece, Piece*
 
   switch (chosen_piece->type) {
     case 0:  // PAWN
-      // if we're trying to move up 1/2 spaces and it's not on a piece 
-      // (PAWN can move twice by default, add checks to see if it's moved before)
-      // replace 1 and 2 with correct number based on player's piece
-      if (file1 == file2 && rank2 == rank1 + (is_white ? -1 : 1)) {
-        if (target_piece != NULL) {
-          if (target_piece->pos.x == file2 && target_piece->pos.y == rank2) {
-            return false;
-          }
-        }
-        return true;
-
-        // if we're trying to go 2 spaces, check if its the first pawn move
-      } else if (file1 == file2 && (rank2 == rank1 + (is_white ? -2 : 2))
-                 && chosen_piece->pos.y == (is_white ? 6 : 1)) {
-        if (target_piece != NULL) {
-          if (target_piece->pos.x == file2 && target_piece->pos.y == rank2) {
-            return false;
-          }
-        }
-        return true;
-        
-        // if we're attempting to take 
-      } else if (file2 == file1 - 1 || file2 == file1 + 1 && rank2 == rank1 + (is_white ? -1 : 1)) { 
-        if (target_piece != NULL) {
-          if (target_piece->pos.x == file2 && target_piece->pos.y == rank2) {
-            return true;
-          }
-        }
-      }
-
-      return false;
+      valid_move = makePawnMove(is_white, checking_attack, pieces, chosen_piece, target_piece, file1, rank1, file2, rank2);
+      return valid_move;
     
     case 1: // BISHOP
       valid_move = makeDiagonalMove(pieces, chosen_piece, target_piece, file1, rank1, file2, rank2);
@@ -89,7 +61,6 @@ bool isPieceMoveValid(bool is_white, Piece** pieces, Piece* chosen_piece, Piece*
         // up/down 1 left 2
         return true;
       }
-
       return false;
     
     case 3: // ROOK
@@ -142,6 +113,27 @@ bool isPieceMoveValid(bool is_white, Piece** pieces, Piece* chosen_piece, Piece*
   }
 
   return true;
+}
+
+bool makePawnMove(bool is_white, bool checking_attack, Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2 ) {
+  if ((file2 == file1 - 1 || file2 == file1 + 1) && rank2 == rank1 + (is_white ? -1 : 1)) {
+    for (int i = 0; i < 32; i++) {
+      if (pieces[i]->pos.x == file2 && pieces[i]->pos.y == rank2) {
+        return true;
+      }
+    }
+  } else if (!checking_attack && file1 == file2 && rank2 == rank1 + (is_white ? -1 : 1)) {
+    if (target_piece != NULL && target_piece->pos.x == file2 && target_piece->pos.y == rank2) {
+      return false;
+    }
+    return true;
+  } else if (!checking_attack && file1 == file2 && (rank2 == rank1 + (is_white ? -2 : 2)) && chosen_piece->pos.y == (is_white ? 6 : 1)) {
+    if (target_piece != NULL && target_piece->pos.x == file2 && target_piece->pos.y == rank2) {
+      return false;
+    }
+    return true;
+  }
+  return false;
 }
 
 bool makeDiagonalMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2) {
@@ -197,28 +189,35 @@ bool makeAxisMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int 
   return false;
 }
 
-bool moveIntoCheck(bool is_white, Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file2, int rank2) {
-  // we need to check if the move is being attacked.
-  // we can do this by looking at the pieces around the king
-  // as well as checking the diagonals/axis. we can optimize this by checking
-  // if one of these attacks would be blocking by a piece anyways and skip it.
-
-  // eureka: loop through each piece and call isPieceMoveValid on the attempted square
-  bool can_be_attacked = false;
+bool isSquareUnderAttack(bool is_white, Piece** pieces, int file, int rank) {
   for (int i = 0; i < 32; i++) {
-    if (pieces[i] != NULL) {
-      if (pieces[i]->color == (is_white ? BLACK : WHITE)) {
-        // check if a piece can move onto the king
-        can_be_attacked = isPieceMoveValid(false, pieces, pieces[i], NULL, pieces[i]->pos.x, pieces[i]->pos.y, file2, rank2);
-        // if any piece can do so, we immediately break as can_be_attacked is now true
-        if (can_be_attacked) break;
+    if (pieces[i] != NULL && pieces[i]->color == (is_white ? BLACK : WHITE)) {
+      if (isPieceMoveValid(!is_white, true, pieces, pieces[i], NULL, pieces[i]->pos.x, pieces[i]->pos.y, file, rank)) {
+        // The opponent's piece can attack the square
+        return true;
       }
     }
   }
-  if (can_be_attacked == true) {
-    printf("%s is in check and it's not letting you make the move.\n", is_white ? "WHITE" : "BLACK");
-  } 
-  return can_be_attacked;
+  return false;
+}
+
+bool moveIntoCheck(bool is_white, Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file2, int rank2) {
+  // Save the current position of the king.
+  int king_file = chosen_piece->pos.x;
+  int king_rank = chosen_piece->pos.y;
+
+  // Simulate the move.
+  chosen_piece->pos.x = file2;
+  chosen_piece->pos.y = rank2;
+
+  // Check if the king is in check after the move.
+  bool in_check = isSquareUnderAttack(is_white, pieces, file2, rank2);
+
+  // Revert the move.
+  chosen_piece->pos.x = king_file;
+  chosen_piece->pos.y = king_rank;
+
+  return in_check;
 }
 
 void freePieces(Piece** pieces) {

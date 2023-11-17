@@ -1,7 +1,5 @@
 #include <player.h>
 
-bool is_player_first = true;
-
 char* getPlayerMove(void) {
   int buffer_size = 6; // 4 chars + newline + null terminator
   char* move = (char*)malloc(buffer_size);

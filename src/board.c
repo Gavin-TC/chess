@@ -5,7 +5,7 @@ int letterToNumberFile(char* rank);
 void movePiece(Piece** pieces, Piece* chosen_piece, int move_file, int move_rank);
 
 // returns a board[]
-char** setupBoard(bool is_player_first) {
+char** setupBoard() {
   char** new_board = (char**) malloc(BOARD_HEIGHT * sizeof(char*));
   if (new_board == NULL) return NULL;
 
@@ -22,14 +22,14 @@ char** setupBoard(bool is_player_first) {
   return new_board;
 }
 
-Piece** setupPieces(bool is_player_first) {
+Piece** setupPieces(bool is_white) {
   Piece** pieces = calloc(32, sizeof(Piece*));
 
   for (int i = 0; i < 32; i++) {
     pieces[i] = calloc(32, sizeof(Piece));
   }
 
-  int white_height = is_player_first ? (BOARD_HEIGHT - 1) : 0;
+  int white_height = is_white ? (BOARD_HEIGHT - 1) : 0;
   int white_pawn_height = (white_height - 1 > 0) ? (white_height - 1) : 1;
 
   int black_height = (white_height == (BOARD_HEIGHT - 1)) ? 0 : (BOARD_HEIGHT - 1);
@@ -270,7 +270,7 @@ bool evaluateMove(bool is_white, char* move, char** board, Piece** pieces) {
   if (chosen_piece != NULL && chosen_piece != mover_king) {
     // 'simulate' move
     printf("giving your stuff a check...\n");
-    if (isPieceMoveValid(chosen_piece->color, pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
+    if (isPieceMoveValid(chosen_piece->color, false, pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
       movePiece(pieces, chosen_piece, file2, rank2);
     }
     
@@ -289,7 +289,7 @@ bool evaluateMove(bool is_white, char* move, char** board, Piece** pieces) {
   }
 
   if (chosen_piece->pos.x == file1 && chosen_piece->pos.y == rank1) {
-    if (chosen_piece->color == (is_player_first) ? BLACK : WHITE) {
+    if (chosen_piece->color == (is_white) ? BLACK : WHITE) {
       printf("You cannot the opponents pieces!\n");
       return false;
     }
@@ -297,13 +297,13 @@ bool evaluateMove(bool is_white, char* move, char** board, Piece** pieces) {
 
   if (chosen_piece->pos.x == file2 && chosen_piece->pos.y == rank2) {
     // trying to take/move onto a friendly piece
-    if (chosen_piece->color == (is_player_first) ? WHITE : BLACK) {
+    if (chosen_piece->color == (is_white) ? WHITE : BLACK) {
       printf("You cannot move your piece ontop of your own pieces!\n");
       return false;
     }
   }
 
-  if (isPieceMoveValid(chosen_piece->color, pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
+  if (isPieceMoveValid(chosen_piece->color, false, pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
     movePiece(pieces, chosen_piece, file2, rank2);
   }
   return true;
@@ -356,7 +356,9 @@ int letterToNumberFile(char* file) {
 void movePiece(Piece** pieces, Piece* chosen_piece, int move_file, int move_rank) {
   for (int i = 0; i < 32; i++) {
     if (pieces[i]->pos.x == move_file && pieces[i]->pos.y == move_rank) {
-      pieces[i]->pos.x -= 20;
+      printf("Piece = %c\n", pieces[i]->chr);
+      pieces[i]->pos.y -= 40;
+      break;
     }
   }
 
