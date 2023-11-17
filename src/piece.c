@@ -3,8 +3,7 @@
 #include <piece.h>
 #include <constants.h>
 
-bool makePawnMove(bool is_white, bool checking_attack, Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2);
-bool makeDiagonalMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2);
+bool makePawnMove(bool is_white, bool checking_attack, Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2); bool makeDiagonalMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2);
 bool makeAxisMove(Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file1, int rank1, int file2, int rank2);
 bool moveIntoCheck(bool is_white, Piece** pieces, Piece* chosen_piece, Piece* target_piece, int file2, int rank2);
 
@@ -217,6 +216,22 @@ bool moveIntoCheck(bool is_white, Piece** pieces, Piece* chosen_piece, Piece* ta
   chosen_piece->pos.x = king_file;
   chosen_piece->pos.y = king_rank;
 
+  // Check for checkmate
+  // <summary>
+  // the king is in checkmate if all of its moves lead to capture
+  // and none of the king's pieces can move in the way of current attack.
+  // </summary>
+
+  bool valid_block = false;
+  if (in_check) {
+    for (int i = 0; i < 32; i++) {
+      if (pieces[i] != NULL && pieces[i]->color == is_white ? WHITE : BLACK) {
+        valid_block = isPieceMoveValid(is_white, false, pieces, chosen_piece, target_piece, pieces[i]->pos.x, pieces[i]->pos.y, file2, rank2);
+      }
+    }
+  }
+  printf("valid_block = %s\n", valid_block ? "TRUE" : "FALSE");
+  
   return in_check;
 }
 

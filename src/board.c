@@ -236,7 +236,6 @@ bool evaluateMove(bool is_white, char* move, char** board, Piece** pieces) {
       !(file2 >= 0 && file2 < 8) ||
       !(rank1 >= 0 && rank1 < 8) ||
       !(rank2 >= 0 && rank2 < 8)) {
-    printf("One or more of the coordinates are out of bounds! (e.g. a9i0 = bad!)\n");
     return false;
   }
 
@@ -255,6 +254,22 @@ bool evaluateMove(bool is_white, char* move, char** board, Piece** pieces) {
       target_piece = pieces[i];
     }
   }
+  
+  // if we didn't find the piece the player was choosing
+  if (chosen_piece == NULL) { 
+    return false;
+  }
+
+  if (chosen_piece->color == is_white ? BLACK : WHITE) {
+    return false;
+  }
+
+  if (chosen_piece->pos.x == file2 && chosen_piece->pos.y == rank2) {
+    // trying to take/move onto a friendly piece
+    if (chosen_piece->color == is_white ? WHITE : BLACK) {
+      return false;
+    }
+  }
 
   // retrieve the king of the color moving a piece right now
   Piece* mover_king = NULL;
@@ -269,44 +284,28 @@ bool evaluateMove(bool is_white, char* move, char** board, Piece** pieces) {
   // (basically checking if the player has to move their king to safety)
   if (chosen_piece != NULL && chosen_piece != mover_king) {
     // 'simulate' move
-    printf("giving your stuff a check...\n");
     if (isPieceMoveValid(chosen_piece->color, false, pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
       movePiece(pieces, chosen_piece, file2, rank2);
     }
     
     if (moveIntoCheck(is_white, pieces, mover_king, NULL, mover_king->pos.x, mover_king->pos.y)) {
-      printf("You're king is in check and you must defend it!\n");
       // if it's still in check, move the piece back.
       movePiece(pieces, chosen_piece, file1, rank1);
       return false;
     }
   }
 
-  // if we didn't find the piece the player was choosing
-  if (chosen_piece == NULL) { 
-    printf("There isn't a piece there!\n");
-    return false;
-  }
-
   if (chosen_piece->pos.x == file1 && chosen_piece->pos.y == rank1) {
     if (chosen_piece->color == (is_white) ? BLACK : WHITE) {
-      printf("You cannot the opponents pieces!\n");
-      return false;
-    }
-  }
-
-  if (chosen_piece->pos.x == file2 && chosen_piece->pos.y == rank2) {
-    // trying to take/move onto a friendly piece
-    if (chosen_piece->color == (is_white) ? WHITE : BLACK) {
-      printf("You cannot move your piece ontop of your own pieces!\n");
       return false;
     }
   }
 
   if (isPieceMoveValid(chosen_piece->color, false, pieces, chosen_piece, target_piece, file1, rank1, file2, rank2)) {
     movePiece(pieces, chosen_piece, file2, rank2);
+    return true;
   }
-  return true;
+  return false;
 }
 
 int letterToNumberFile(char* file) {
